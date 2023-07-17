@@ -3,6 +3,7 @@ import cacheHelper from './helpers/cacheHelper';
 import OpenAIService from './services/openAIService';
 import GttsService from './services/gttsService';
 import VideoService from './services/videoService';
+import GoogleSearchService from './services/googleSearchService';
 
 interface videoJsonData {
   fulltext: string;
@@ -71,6 +72,32 @@ const getSearchTerms = async (
   return output;
 };
 
+const getImages = async (
+  googleSearchService: GoogleSearchService,
+  result: videoJsonData | null,
+): Promise<videoJsonData | null> => {
+  const output = result;
+  if (
+    output &&
+    output.phrases &&
+    result &&
+    result.phrases &&
+    result.phrases.length > 0
+  ) {
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const [i, phrase] of result.phrases.entries()) {
+      if (phrase.searchTerm) {
+        output.phrases[i].image = await googleSearchService.getImage(
+          phrase.searchTerm,
+          String(i),
+        );
+      }
+      cacheHelper.writeFile('video.json', JSON.stringify(output));
+    }
+  }
+  return output;
+};
+
 const getAudios = async (
   gttsService: GttsService,
   result: videoJsonData | null,
@@ -132,7 +159,12 @@ const runApp = async () => {
   const openAIService = new OpenAIService();
   const gttsService = new GttsService();
   const videoService = new VideoService();
+  const googleSearchService = new GoogleSearchService();
   let result: videoJsonData | null = null;
+
+  cacheHelper.clearFolder('images');
+  cacheHelper.clearFolder('audios');
+  cacheHelper.clearFolder('videos');
 
   // read json from folder
   const resultTmp = cacheHelper.readFile('video.json');
@@ -142,11 +174,11 @@ const runApp = async () => {
 
   result = await generateScript(
     openAIService,
-    'se comporte como um youtuber e me entregue um video de 5 minutos, sobre curiosidades sobre futebol',
+    'se comporte como um youtuber e me entregue um video de 5 minutos, sobre 3 curiosidades sobre esportes',
   );
   result = await getSearchTerms(openAIService, result);
   result = await getAudios(gttsService, result);
-
+  result = await getImages(googleSearchService, result);
   await generateVideo(videoService, result);
   console.log(result);
 };

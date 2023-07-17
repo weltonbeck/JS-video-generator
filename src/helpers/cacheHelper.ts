@@ -19,8 +19,18 @@ const readFile = (filename: string) => {
   return output;
 };
 
+const clearFolder = (tpmPath: 'images' | 'videos' | 'audios') => {
+  const files = fs.readdirSync(getFilePath(tpmPath));
+  files
+    .filter(file => file !== '.keep')
+    .forEach(file => {
+      fs.rmSync(getFilePath(`${tpmPath}/${file}`));
+    });
+};
+
 export default {
   getFilePath,
   writeFile,
   readFile,
+  clearFolder,
 };

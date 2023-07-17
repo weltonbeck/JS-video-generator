@@ -1,4 +1,3 @@
-import Jimp from 'jimp';
 import ffmpeg from 'fluent-ffmpeg';
 import cacheHelper from '../helpers/cacheHelper';
 
@@ -94,9 +93,6 @@ export default class VideoService {
 
   async generate(itens: { image: string; audio: string; text: string }[] = []) {
     try {
-      // let image = await Jimp.read(cacheHelper.getFilePath(`images/0.jpg`));
-      // image.resize(640, 640).write(cacheHelper.getFilePath(`images/0.jpg`));
-
       const videos = [];
       // eslint-disable-next-line no-restricted-syntax
       for await (const [i, item] of itens.entries()) {
