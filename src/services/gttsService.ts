@@ -8,7 +8,7 @@ export default class GttsService {
     language = 'pt-BR',
   ): Promise<string> {
     try {
-      const path = cacheHelper.getFilePath(`/audios/${name}.mp3`);
+      const path = cacheHelper.getFilePath(`audios/${name}.mp3`);
       await gTTS(text, {
         lang: language,
         path,

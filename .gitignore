@@ -9,6 +9,8 @@ cache/audios/*
 !cache/images
 cache/images/*
 !cache/images/.keep
-
+!cache/videos
+cache/videos/*
+!cache/videos/.keep
 
 .DS_Store

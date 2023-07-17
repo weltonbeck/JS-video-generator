@@ -2,6 +2,7 @@ import 'dotenv/config';
 import cacheHelper from './helpers/cacheHelper';
 import OpenAIService from './services/openAIService';
 import GttsService from './services/gttsService';
+import VideoService from './services/videoService';
 
 interface videoJsonData {
   fulltext: string;
@@ -89,28 +90,64 @@ const getAudios = async (
         String(i),
       );
     }
+    cacheHelper.writeFile('video.json', JSON.stringify(output));
   }
   return output;
+};
+
+const generateVideo = async (
+  videoService: VideoService,
+  result: videoJsonData | null,
+): Promise<void> => {
+  const output = result;
+  if (
+    output &&
+    output.phrases &&
+    result &&
+    result.phrases &&
+    result.phrases.length > 0
+  ) {
+    const check = result.phrases.filter(
+      e =>
+        e.audio !== null &&
+        e.image !== null &&
+        e.audio !== '' &&
+        e.image !== '',
+    );
+    if (check.length === result.phrases.length) {
+      await videoService.generate(
+        result.phrases.map(e => {
+          return {
+            image: String(e.image),
+            audio: String(e.audio),
+            text: String(e.text),
+          };
+        }),
+      );
+    }
+  }
 };
 
 const runApp = async () => {
   const openAIService = new OpenAIService();
   const gttsService = new GttsService();
+  const videoService = new VideoService();
   let result: videoJsonData | null = null;
 
   // read json from folder
-  // const resultTmp = cacheHelper.readFile('video.json');
-  // if (resultTmp) {
-  //   result = JSON.parse(resultTmp);
-  // }
+  const resultTmp = cacheHelper.readFile('video.json');
+  if (resultTmp) {
+    result = JSON.parse(resultTmp);
+  }
 
   result = await generateScript(
     openAIService,
-    'se comporte como um youtuber e me entregue um video de 5 minutos, sobre curiosidades sobre cachorros',
+    'se comporte como um youtuber e me entregue um video de 5 minutos, sobre curiosidades sobre futebol',
   );
   result = await getSearchTerms(openAIService, result);
   result = await getAudios(gttsService, result);
 
+  await generateVideo(videoService, result);
   console.log(result);
 };
 
